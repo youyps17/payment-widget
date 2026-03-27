@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Оплата</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .widget { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 14px; color: #666; margin-bottom: 5px;}
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        button:disabled { background: #ccc; }
+    </style>
+</head>
+<body>
+<div class="widget">
+    <h2>Оплата</h2>
+    <form id="paymentForm">
+        <div class="form-group"><label>First Name</label><input type="text" id="firstName" required></div>
+        <div class="form-group"><label>Last Name</label><input type="text" id="lastName" required></div>
+        <div class="form-group"><label>Email</label><input type="email" id="email" required></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="phone" required></div>
+        <div class="form-group"><label>City</label><input type="text" id="city" required></div>
+        <div class="form-group"><label>Address Line 1</label><input type="text" id="line1" required></div>
+        <div class="form-group"><label>Address Line 2 (optional)</label><input type="text" id="line2"></div>
+        <div class="form-group"><label>Amount (AUD)</label><input type="number" id="amount" step="0.01" required></div>
+        <button type="submit" id="submitBtn">Оплатить</button>
+    </form>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+<script>
+document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.innerText = 'Обработка...';
+
+    const email = document.getElementById('email').value.trim();
+    let clientId = localStorage.getItem(`clientId_${email}`);
+    if (!clientId) { clientId = uuid.v4(); localStorage.setItem(`clientId_${email}`, clientId); }
+
+    const payload = {
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        email, phone: document.getElementById('phone').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        line1: document.getElementById('line1').value.trim(),
+        line2: document.getElementById('line2').value.trim(),
+        amount: document.getElementById('amount').value,
+        clientId
+    };
+
+    try {
+        const response = await fetch('/api/process-payment', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (result.success) window.location.href = result.redirectUrl;
+        else throw new Error('Ошибка');
+    } catch (err) {
+        alert('Произошла ошибка при оплате.');
+        btn.disabled = false; btn.innerText = 'Оплатить';
+    }
+});
+</script>
+</body>
+</html>
