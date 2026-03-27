@@ -14,10 +14,14 @@ app.post('/api/process-payment', async (req, res) => {
         const { firstName, lastName, phone, email, city, line1, line2, amount, clientId } = req.body;
 
         const authResponse = await axios.post(process.env.AUTH_API_URL, {
-            login: process.env.AUTH_LOGIN,
-            password: process.env.AUTH_PASSWORD
+            account_id: process.env.AUTH_LOGIN,   // Передаем account_id
+            public_key: process.env.AUTH_PASSWORD // Передаем public_key
         }, {
-            headers: { 'Accept': 'application/json', 'Accept-Charset': 'UTF-8', 'Content-Type': 'application/json' }
+            headers: { 
+                'Accept': 'application/json', 
+                'Accept-Charset': 'UTF-8', 
+                'Content-Type': 'application/json' 
+            }
         });
 
         const accessToken = authResponse.data.access_token; 
